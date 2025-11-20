@@ -7,168 +7,14 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
     <script>
-      // CONFIGURACIÓN FINAL: ¡PEGA TU NUEVA CLAVE AQUÍ!
-      const firebaseConfig = {
-        apiKey: "AIzaSyCAOVuj0Azz0yeonRUJ16GaszYcQAZYc9g", // <-- ¡Pega la clave nueva aquí!
-        authDomain: "lghomeoffice-afiliados.firebaseapp.com",
-        projectId: "lghomeoffice-afiliados",
-        storageBucket: "lghomeoffice-afiliados.firebasestorage.app",
-        messagingSenderId: "629798405466",
-        appId: "1:629798405466:web:6965df48bf7a1c678c9f63"
-      };
-
-      // Inicialización de Firebase v9 (El código de inicialización NO cambia)
-      const app = firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-
-      // Cache para la búsqueda
-      let productsCache = [];
-      let isModalOpen = false; 
-
-      // Función para obtener y renderizar productos (VERSIÓN FINAL)
-      async function fetchProducts() {
-        const productsContainer = document.getElementById('products-container');
-        productsContainer.innerHTML = '<div class="text-center py-10 text-gray-500">Conectando con la API...</div>';
-        
-        try {
-          // Intentar la conexión y obtener un snapshot (instantánea)
-          const snapshot = await db.collection('productos_home_office').get();
-          
-          if (snapshot.empty) {
-             productsContainer.innerHTML = '<div class="text-center py-10 text-orange-500 font-semibold">✅ Conexión exitosa, pero no se encontraron productos.</div>';
-          } else {
-             // Si la conexión fue exitosa y hay datos, renderizamos.
-             productsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-             renderProducts(productsCache);
-          }
-        } catch (error) {
-          // Si esto falla AHORA, la clave de API fue invalidada o hay un problema de red.
-          console.error("Fallo de conexión persistente: ", error);
-          productsContainer.innerHTML = '<div class="text-center py-10 text-red-700 font-bold text-xl">❌ FALLO FINAL DE CONEXIÓN. Revise la clave de API.</div>';
-        }
-      }
-      
-      // Función de Renderizado
-      function renderProducts(products) {
-          const productsContainer = document.getElementById('products-container');
-          productsContainer.innerHTML = ''; // Limpiar contenedor
-
-          if (products.length === 0) {
-            productsContainer.innerHTML = '<div class="text-center py-10 text-gray-500 text-xl font-semibold">No se encontraron productos que coincidan con la búsqueda.</div>';
-            return;
-          }
-
-          products.forEach(product => {
-              const card = `
-                  <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 overflow-hidden border border-gray-100 flex flex-col">
-                      <img class="w-full h-48 object-cover" src="${product.image_url || 'https://via.placeholder.com/400x300'}" alt="${product.name}">
-                      <div class="p-6 flex flex-col flex-grow">
-                          <h3 class="text-xl font-bold text-gray-800 mb-2">${product.name}</h3>
-                          <p class="text-gray-600 text-sm mb-4 flex-grow">${product.description}</p>
-                          <div class="mt-auto">
-                              <span class="text-2xl font-extrabold text-indigo-600 block mb-3">$${product.price.toFixed(2)}</span>
-                              <button onclick="openComparisonModal('${product.id}')" class="w-full bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105 shadow-md">
-                                  Comparar Precios
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-              `;
-              productsContainer.innerHTML += card;
-          });
-      }
-
-      // Lógica de Búsqueda y Modal (sin cambios)
-      function searchProducts(query) {
-        const lowerCaseQuery = query.toLowerCase();
-        const filteredProducts = productsCache.filter(product => 
-            product.name.toLowerCase().includes(lowerCaseQuery) || 
-            product.description.toLowerCase().includes(lowerCaseQuery)
-        );
-        renderProducts(filteredProducts);
-      }
-
-      function openComparisonModal(productId) {
-        const product = productsCache.find(p => p.id === productId);
-        const modal = document.getElementById('comparison-modal');
-        const modalContent = document.getElementById('comparison-content');
-
-        if (product) {
-          modalContent.innerHTML = `
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">${product.name}</h3>
-            <p class="text-gray-600 mb-6">${product.description}</p>
-            <div class="space-y-4">
-              <div class="flex justify-between items-center p-4 border rounded-lg bg-green-50">
-                <div class="font-semibold text-lg text-green-700">Amazon</div>
-                <div class="text-2xl font-bold text-green-700">$${product.price.toFixed(2)}</div>
-                <a href="${product.link}" target="_blank" rel="nofollow" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition duration-300">
-                  Comprar en Amazon
-                </a>
-              </div>
-            </div>
-            <p class="mt-6 text-sm text-center text-gray-500">
-                **Nota:** El precio de Amazon incluye tu enlace de afiliado.
-            </p>
-          `;
-          modal.classList.remove('hidden');
-          isModalOpen = true;
-        }
-      }
-
-      function closeComparisonModal() {
-        document.getElementById('comparison-modal').classList.add('hidden');
-        isModalOpen = false;
-      }
-      
-      // Función de suscripción (sin cambios)
-      async function subscribe() {
-        const emailInput = document.getElementById('newsletter-email');
-        const email = emailInput.value;
-        const messageContainer = document.getElementById('newsletter-message');
-
-        if (!email || !email.includes('@')) {
-          messageContainer.textContent = 'Por favor, introduce un correo electrónico válido.';
-          messageContainer.classList.remove('text-green-500', 'hidden');
-          messageContainer.classList.add('text-red-500');
-          return;
-        }
-
-        try {
-          await db.collection('subscribers').add({
-            email: email,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          
-          messageContainer.textContent = '¡Gracias por suscribirte! Revisa tu bandeja de entrada.';
-          messageContainer.classList.remove('text-red-500', 'hidden');
-          messageContainer.classList.add('text-green-500');
-          emailInput.value = ''; 
-          
-        } catch (error) {
-          messageContainer.textContent = 'Error al suscribirse. Inténtalo de nuevo.';
-          messageContainer.classList.remove('text-green-500', 'hidden');
-          messageContainer.classList.add('text-red-500');
-        }
-      }
-      
-      document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && isModalOpen) {
-          closeComparisonModal();
-        }
-      });
-      
+      // Función simple para manejar el menú móvil
       document.addEventListener('DOMContentLoaded', () => {
-        fetchProducts();
-        
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => {
-            searchProducts(e.target.value);
+        document.getElementById('menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
         });
       });
+      // El resto de la lógica de comparación ha sido eliminada
     </script>
 </head>
 
@@ -199,12 +45,6 @@
             <a href="#contacto" class="block text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-md p-2 font-medium">Contacto</a>
         </nav>
     </header>
-
-    <script>
-        document.getElementById('menu-button').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-    </script>
     
     <main>
         <div class="relative bg-white pt-16 pb-20 overflow-hidden sm:pt-24 sm:pb-28">
@@ -223,64 +63,59 @@
             </div>
         </div>
 
-        <div class="bg-white py-8 shadow-inner border-t border-gray-100">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="relative">
-                    <input type="text" id="search-input" placeholder="Busca productos, como 'silla ergonómica' o 'monitor 4k'..." 
-                           class="w-full py-4 pl-12 pr-4 text-lg border-2 border-gray-300 rounded-full focus:outline-none focus:border-indigo-500 transition duration-150 shadow-lg">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <section id="productos" class="py-16 sm:py-24">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">Nuestras Selecciones Top</h2>
                 
                 <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                    
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 overflow-hidden border border-gray-100 flex flex-col">
+                        <img class="w-full h-48 object-cover" src="https://placehold.co/400x300/1e40af/ffffff?text=Silla+Ergo" alt="Silla Ergonómica Pro">
+                        <div class="p-6 flex flex-col flex-grow">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Silla Ergonómica Pro</h3>
+                            <p class="text-gray-600 text-sm mb-4 flex-grow">Soporte lumbar 3D y malla transpirable de alta densidad.</p>
+                            <div class="mt-auto">
+                                <span class="text-2xl font-extrabold text-indigo-600 block mb-3">$399.99</span>
+                                <a href="https://amzn.to/tu-enlace-silla" target="_blank" rel="nofollow" class="w-full block text-center bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105 shadow-md">
+                                    Comprar en Amazon
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 overflow-hidden border border-gray-100 flex flex-col">
+                        <img class="w-full h-48 object-cover" src="https://placehold.co/400x300/1e40af/ffffff?text=Monitor+QHD" alt="Monitor UltraWide QHD">
+                        <div class="p-6 flex flex-col flex-grow">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Monitor UltraWide QHD</h3>
+                            <p class="text-gray-600 text-sm mb-4 flex-grow">Ideal para multitarea y diseño gráfico, pantalla curva.</p>
+                            <div class="mt-auto">
+                                <span class="text-2xl font-extrabold text-indigo-600 block mb-3">$549.50</span>
+                                <a href="https://amzn.to/tu-enlace-monitor" target="_blank" rel="nofollow" class="w-full block text-center bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105 shadow-md">
+                                    Comprar en Amazon
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 overflow-hidden border border-gray-100 flex flex-col">
+                        <img class="w-full h-48 object-cover" src="https://placehold.co/400x300/1e40af/ffffff?text=Teclado" alt="Teclado Mecánico Silencioso">
+                        <div class="p-6 flex flex-col flex-grow">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Teclado Mecánico Silencioso</h3>
+                            <p class="text-gray-600 text-sm mb-4 flex-grow">Switches táctiles para largas jornadas de escritura en casa.</p>
+                            <div class="mt-auto">
+                                <span class="text-2xl font-extrabold text-indigo-600 block mb-3">$95.00</span>
+                                <a href="https://amzn.to/tu-enlace-teclado" target="_blank" rel="nofollow" class="w-full block text-center bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105 shadow-md">
+                                    Comprar en Amazon
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     </div>
             </div>
         </section>
         
-        <section class="bg-indigo-50 py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-3xl font-extrabold text-gray-900 mb-4">¿No sabes por dónde empezar?</h2>
-                <p class="text-xl text-indigo-700 max-w-2xl mx-auto mb-8">
-                    Descarga nuestras guías gratuitas para tomar la mejor decisión de compra.
-                </p>
-                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <a href="guia_silla.html" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg transition duration-300">
-                        Guía de Sillas Ergonómicas
-                    </a>
-                    <a href="guia_monitor.html" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-100 shadow-lg transition duration-300">
-                        Guía de Monitores
-                    </a>
-                </div>
-            </div>
-        </section>
-        
-        <section id="contacto" class="py-16 sm:py-24 bg-white">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-3xl font-extrabold text-gray-900 mb-4">Únete a Nuestra Newsletter</h2>
-                <p class="text-gray-600 mb-8 max-w-xl mx-auto">
-                    Recibe los mejores descuentos y análisis de equipo de Home Office directamente en tu correo. ¡Sin spam!
-                </p>
-                <div class="max-w-lg mx-auto flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                    <input type="email" id="newsletter-email" placeholder="Introduce tu correo electrónico" 
-                           class="flex-grow py-3 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150" required>
-                    <button onclick="subscribe()" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-300 shadow-md">
-                        Suscribirme
-                    </button>
-                </div>
-                <p id="newsletter-message" class="mt-4 text-sm font-medium hidden"></p>
-            </div>
-        </section>
-
-    </main>
+        </main>
 
     <footer class="bg-gray-800 text-white py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -297,24 +132,5 @@
             </p>
         </div>
     </footer>
-
-    <div id="comparison-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <button onclick="closeComparisonModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-                
-                <h3 class="text-3xl leading-6 font-medium text-indigo-600 mb-6">Comparativa de Precios</h3>
-                
-                <div id="comparison-content" class="px-7 py-3">
-                    <p class="text-gray-500">Cargando datos...</p>
-                </div>
-                
-            </div>
-        </div>
-    </div>
 </body>
 </html>
