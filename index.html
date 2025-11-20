@@ -27,22 +27,28 @@
       let productsCache = [];
       let isModalOpen = false; // Estado para el modal
 
-      // Función para obtener y renderizar productos
+      // 🚨 FUNCIÓN DE DIAGNÓSTICO (NUEVA) 🚨
       async function fetchProducts() {
         const productsContainer = document.getElementById('products-container');
-        productsContainer.innerHTML = '<div class="text-center py-10 text-gray-500">Cargando productos...</div>';
+        productsContainer.innerHTML = '<div class="text-center py-10 text-gray-500">Intentando conectar...</div>';
         
         try {
-          // Nota: La colección es 'productos_home_office'
+          // Intentar la conexión y obtener un snapshot (instantánea)
           const snapshot = await db.collection('productos_home_office').get();
           
-          productsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          
-          renderProducts(productsCache);
+          if (snapshot.empty) {
+             productsContainer.innerHTML = '<div class="text-center py-10 text-orange-500 font-semibold">✅ Conexión exitosa, pero la colección está vacía.</div>';
+          } else {
+             productsContainer.innerHTML = '<div class="text-center py-10 text-green-600 font-bold text-xl">✅ ¡CONEXIÓN EXITOSA!</div>';
+             
+             // Si la conexión es exitosa, vamos a intentar el renderizado
+             productsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+             renderProducts(productsCache);
+          }
         } catch (error) {
-          // Si esto falla, el error es en la configuración de Firebase (reglas o claves)
-          console.error("Error al obtener productos: ", error);
-          productsContainer.innerHTML = '<div class="text-center py-10 text-red-500">Error al cargar productos. Por favor, revisa la consola.</div>';
+          // Si esto falla, la conexión inicial a Firebase falló.
+          console.error("Fallo de conexión inicial: ", error);
+          productsContainer.innerHTML = '<div class="text-center py-10 text-red-500 font-bold text-xl">❌ FALLO DE CONEXIÓN. Error en la configuración de claves/reglas.</div>';
         }
       }
       
