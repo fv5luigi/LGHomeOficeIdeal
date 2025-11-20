@@ -11,9 +11,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <script>
-      // CONFIGURACIÓN FINAL Y COMPLETA
+      // CONFIGURACIÓN FINAL: ¡PEGA TU NUEVA CLAVE AQUÍ!
       const firebaseConfig = {
-        apiKey: "AIzaSyDjjFLcjk5CK1tw8Vs4hI8nkQHlJ06fyoY", // <-- ¡Pega la clave nueva aquí!
+        apiKey: "AIzaSyCAOVuj0Azz0yeonRUJ16GaszYcQAZYc9g", // <-- ¡Pega la clave nueva aquí!
         authDomain: "lghomeoffice-afiliados.firebaseapp.com",
         projectId: "lghomeoffice-afiliados",
         storageBucket: "lghomeoffice-afiliados.firebasestorage.app",
@@ -48,7 +48,7 @@
         } catch (error) {
           // Si esto falla AHORA, la clave de API fue invalidada o hay un problema de red.
           console.error("Fallo de conexión persistente: ", error);
-          productsContainer.innerHTML = '<div class="text-center py-10 text-red-700 font-bold text-xl">❌ FALLO FINAL DE CONEXIÓN. Es necesario verificar la clave API.</div>';
+          productsContainer.innerHTML = '<div class="text-center py-10 text-red-700 font-bold text-xl">❌ FALLO FINAL DE CONEXIÓN. Revise la clave de API.</div>';
         }
       }
       
