@@ -7,12 +7,13 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <script>
-      // CONFIGURACIÓN ACTUALIZADA: Con el nuevo AppId
+      // CONFIGURACIÓN FINAL Y COMPLETA
       const firebaseConfig = {
-        apiKey: "AIzaSyDjjFLcjk5CK1tw8Vs4hI8nkQHlJ06fyoY",
+        apiKey: "AIzaSyDjjFLcjk5CK1tw8Vs4hI8nkQHlJ06fyoY", // <-- ¡Pega la clave nueva aquí!
         authDomain: "lghomeoffice-afiliados.firebaseapp.com",
         projectId: "lghomeoffice-afiliados",
         storageBucket: "lghomeoffice-afiliados.firebasestorage.app",
@@ -20,35 +21,34 @@
         appId: "1:629798405466:web:6965df48bf7a1c678c9f63"
       };
 
-      firebase.initializeApp(firebaseConfig);
+      // Inicialización de Firebase v9 (El código de inicialización NO cambia)
+      const app = firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
 
       // Cache para la búsqueda
       let productsCache = [];
-      let isModalOpen = false; // Estado para el modal
+      let isModalOpen = false; 
 
-      // 🚨 FUNCIÓN DE DIAGNÓSTICO (NUEVA) 🚨
+      // Función para obtener y renderizar productos (VERSIÓN FINAL)
       async function fetchProducts() {
         const productsContainer = document.getElementById('products-container');
-        productsContainer.innerHTML = '<div class="text-center py-10 text-gray-500">Intentando conectar...</div>';
+        productsContainer.innerHTML = '<div class="text-center py-10 text-gray-500">Conectando con la API...</div>';
         
         try {
           // Intentar la conexión y obtener un snapshot (instantánea)
           const snapshot = await db.collection('productos_home_office').get();
           
           if (snapshot.empty) {
-             productsContainer.innerHTML = '<div class="text-center py-10 text-orange-500 font-semibold">✅ Conexión exitosa, pero la colección está vacía.</div>';
+             productsContainer.innerHTML = '<div class="text-center py-10 text-orange-500 font-semibold">✅ Conexión exitosa, pero no se encontraron productos.</div>';
           } else {
-             productsContainer.innerHTML = '<div class="text-center py-10 text-green-600 font-bold text-xl">✅ ¡CONEXIÓN EXITOSA!</div>';
-             
-             // Si la conexión es exitosa, vamos a intentar el renderizado
+             // Si la conexión fue exitosa y hay datos, renderizamos.
              productsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
              renderProducts(productsCache);
           }
         } catch (error) {
-          // Si esto falla, la conexión inicial a Firebase falló.
-          console.error("Fallo de conexión inicial: ", error);
-          productsContainer.innerHTML = '<div class="text-center py-10 text-red-500 font-bold text-xl">❌ FALLO DE CONEXIÓN. Error en la configuración de claves/reglas.</div>';
+          // Si esto falla AHORA, la clave de API fue invalidada o hay un problema de red.
+          console.error("Fallo de conexión persistente: ", error);
+          productsContainer.innerHTML = '<div class="text-center py-10 text-red-700 font-bold text-xl">❌ FALLO FINAL DE CONEXIÓN. Es necesario verificar la clave API.</div>';
         }
       }
       
@@ -82,7 +82,7 @@
           });
       }
 
-      // Lógica de Búsqueda
+      // Lógica de Búsqueda y Modal (sin cambios)
       function searchProducts(query) {
         const lowerCaseQuery = query.toLowerCase();
         const filteredProducts = productsCache.filter(product => 
@@ -92,14 +92,12 @@
         renderProducts(filteredProducts);
       }
 
-      // Lógica del Modal de Comparación de Precios
       function openComparisonModal(productId) {
         const product = productsCache.find(p => p.id === productId);
         const modal = document.getElementById('comparison-modal');
         const modalContent = document.getElementById('comparison-content');
 
         if (product) {
-          // Contenido simulado del comparador de precios (debes implementar la lógica real aquí)
           modalContent.innerHTML = `
             <h3 class="text-2xl font-bold text-gray-800 mb-4">${product.name}</h3>
             <p class="text-gray-600 mb-6">${product.description}</p>
@@ -111,18 +109,9 @@
                   Comprar en Amazon
                 </a>
               </div>
-              
-              <div class="flex justify-between items-center p-4 border rounded-lg bg-gray-50">
-                <div class="font-semibold text-lg text-gray-700">Competidor X</div>
-                <div class="text-2xl font-bold text-gray-700">$${(product.price * 1.05).toFixed(2)}</div>
-                <a href="#" target="_blank" class="bg-gray-400 text-white py-2 px-4 rounded cursor-not-allowed">
-                  Ver Oferta
-                </a>
-              </div>
-              
             </div>
             <p class="mt-6 text-sm text-center text-gray-500">
-                **Nota:** Los precios pueden variar. El precio de Amazon incluye tu enlace de afiliado.
+                **Nota:** El precio de Amazon incluye tu enlace de afiliado.
             </p>
           `;
           modal.classList.remove('hidden');
@@ -135,7 +124,7 @@
         isModalOpen = false;
       }
       
-      // Función de suscripción al Newsletter (simulación)
+      // Función de suscripción (sin cambios)
       async function subscribe() {
         const emailInput = document.getElementById('newsletter-email');
         const email = emailInput.value;
@@ -157,7 +146,7 @@
           messageContainer.textContent = '¡Gracias por suscribirte! Revisa tu bandeja de entrada.';
           messageContainer.classList.remove('text-red-500', 'hidden');
           messageContainer.classList.add('text-green-500');
-          emailInput.value = ''; // Limpiar el campo
+          emailInput.value = ''; 
           
         } catch (error) {
           messageContainer.textContent = 'Error al suscribirse. Inténtalo de nuevo.';
@@ -166,18 +155,15 @@
         }
       }
       
-      // Manejar el cierre del modal con la tecla ESC
       document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' && isModalOpen) {
           closeComparisonModal();
         }
       });
       
-      // Inicialización: Cargar productos al cargar la página
       document.addEventListener('DOMContentLoaded', () => {
         fetchProducts();
         
-        // Asignar el listener de la barra de búsqueda
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => {
             searchProducts(e.target.value);
